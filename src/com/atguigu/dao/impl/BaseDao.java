@@ -26,10 +26,10 @@ public abstract class BaseDao {
             return queryRunner.update(connection, sql, args);
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            JdbcUtils.close(connection);
+            //dao执行操作之后,不能关闭连接,否则不能确保相关的操作使用同一个连接
+            //必须要抛出异常,方便捕获
+            throw new RuntimeException(e);
         }
-        return -1;
     }
 
     /**
@@ -39,18 +39,16 @@ public abstract class BaseDao {
      * @param sql  执行的sql语句
      * @param args sql对应的参数值
      * @param <T>  返回的类型的泛型
-     * @return
+     * @return 对应的数据库对象
      */
     public <T> T queryForOne(Class<T> type, String sql, Object... args) {
         Connection con = JdbcUtils.getConnection();
         try {
-            return queryRunner.query(con, sql, new BeanHandler<T>(type), args);
-        } catch (SQLException e) {
+            return queryRunner.query(con, sql, new BeanHandler<>(type), args);
+        } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            JdbcUtils.close(con);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     /**
@@ -60,25 +58,23 @@ public abstract class BaseDao {
      * @param sql  执行的sql语句
      * @param args sql对应的参数值
      * @param <T>  返回的类型的泛型
-     * @return
+     * @return 对应的数据库对象
      */
     public <T> List<T> queryForList(Class<T> type, String sql, Object... args) {
         Connection con = JdbcUtils.getConnection();
         try {
-            return queryRunner.query(con, sql, new BeanListHandler<T>(type), args);
-        } catch (SQLException e) {
+            return queryRunner.query(con, sql, new BeanListHandler<>(type), args);
+        } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            JdbcUtils.close(con);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     /**
      * 执行返回一行一列的sql语句
      * @param sql   执行的sql语句
      * @param args  sql对应的参数值
-     * @return
+     * @return 对应的数据库对象
      */
     public Object queryForSingleValue(String sql, Object... args){
 
@@ -88,11 +84,8 @@ public abstract class BaseDao {
             return queryRunner.query(conn, sql, new ScalarHandler(), args);
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            JdbcUtils.close(conn);
+            throw new RuntimeException(e);
         }
-        return null;
-
     }
 
 }

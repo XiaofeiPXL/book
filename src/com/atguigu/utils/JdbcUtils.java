@@ -11,6 +11,7 @@ import java.util.Properties;
 public class JdbcUtils {
 
     private static DruidDataSource dataSource;
+    private static ThreadLocal<Connection> threadLocal = new ThreadLocal<>();
 
     static {
         try {
@@ -34,29 +35,65 @@ public class JdbcUtils {
      */
     public static Connection getConnection(){
 
-        Connection conn = null;
+        Connection conn = threadLocal.get();
 
-        try {
-            conn = dataSource.getConnection();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(conn==null){
+            try{
+                conn = dataSource.getConnection(); //从数据库连接池获取连接
+                threadLocal.set(conn);//保存到ThreadLocal对象中,供后面的jdbc操作使用
+                conn.setAutoCommit(false);//设置为手动管理事务
+            }catch(SQLException e){
+                e.printStackTrace();
+            }
         }
-
         return conn;
     }
 
     /**
-     * 关闭连接，放回数据库连接池
-     * @param conn
+     * 提交事务,并关闭释放连接
      */
-    public static void close(Connection conn){
-        if (conn != null) {
-            try {
-                conn.close();
-            } catch (SQLException e) {
+    public static void commitAndClose(){
+        Connection connection = threadLocal.get();
+        //如果不等于null,说明之前操作过数据库,使用过连接
+        if(connection!=null){
+            try{
+                connection.commit();//提交事务
+            }catch(SQLException e){
                 e.printStackTrace();
+            }finally {
+                try{
+                    connection.close();//关闭连接,释放资源
+                }catch (SQLException e){
+                    e.printStackTrace();
+                }
             }
         }
+        //Tomcat底层使用了线程池技术
+        threadLocal.remove();
+    }
+
+
+    /**
+     * 回滚事务,并关闭释放连接
+     */
+    public static void rollbackAndClose(){
+        Connection connection = threadLocal.get();
+        //如果不等于null,说明之前操作过数据库,使用过连接
+        if(connection!=null){
+            try{
+                connection.rollback();//提交事务
+            }catch(SQLException e){
+                e.printStackTrace();
+            }finally {
+                try{
+                    connection.close();//关闭连接,释放资源
+                }catch (SQLException e){
+                    e.printStackTrace();
+                }
+            }
+        }
+        //Tomcat底层使用了线程池技术
+        threadLocal.remove();
     }
 
 }

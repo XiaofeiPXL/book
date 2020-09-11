@@ -62,6 +62,16 @@
         <url-pattern>/orderServlet</url-pattern>
     </servlet-mapping>
 
+    <filter>
+        <filter-name>ManagerFilter</filter-name>
+        <filter-class>com.atguigu.filter.ManagerFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>ManagerFilter</filter-name>
+        <url-pattern>/pages/manager/*</url-pattern>
+        <url-pattern>/manager/bookServlet</url-pattern>
+    </filter-mapping>
+
 
    <!--下面是cookie和session测试的servlet配置-->
     <servlet>
