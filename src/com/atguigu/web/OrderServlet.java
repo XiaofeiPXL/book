@@ -40,14 +40,7 @@ public class OrderServlet extends BaseServlet {
             req.getRequestDispatcher("/pages/user/login.jsp").forward(req, resp);
             return;
         }
-        String orderId = null;
-        try {
-            orderId = orderService.createOrder(cart, loginUser.getId());
-            JdbcUtils.commitAndClose();
-        } catch (Exception e) {
-            JdbcUtils.rollbackAndClose();
-            e.printStackTrace();
-        }
+        String orderId = orderService.createOrder(cart, loginUser.getId());
         //将生成的订单号保存到request域中
         req.getSession().setAttribute("orderId", orderId);
         System.out.println(req.getContextPath());
