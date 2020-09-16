@@ -4,17 +4,34 @@ import com.atguigu.pojo.User;
 import com.atguigu.service.UserService;
 import com.atguigu.service.impl.UserServiceImpl;
 import com.atguigu.utils.WebUtils;
+import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.google.code.kaptcha.Constants.KAPTCHA_SESSION_KEY;
 
 public class UserServlet extends BaseServlet {
 
     private UserService userService = new UserServiceImpl();
+
+    protected void ajaxExistsUsername(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //获取请求参数username
+        String username = req.getParameter("username");
+        //调用userService.existUsername();
+        boolean existUsername = userService.existsUsername(username);
+        Map<String, Object> map = new HashMap<>();
+        //把返回结果封装成map对象
+        map.put("existsUsername",existUsername);
+        Gson gson = new Gson();
+        String checkResult = gson.toJson(map);
+        //将map对象转换成JSON对象回传给客户端
+        resp.getWriter().write(checkResult);
+    }
 
     /**
      * 处理登录的功能
@@ -51,7 +68,7 @@ public class UserServlet extends BaseServlet {
     /**
      * 处理注册的功能
      *
-     * @param req 请求
+     * @param req  请求
      * @param resp 响应
      * @throws ServletException
      * @throws IOException
@@ -65,7 +82,7 @@ public class UserServlet extends BaseServlet {
         req.getSession().removeAttribute(KAPTCHA_SESSION_KEY);
         User user = WebUtils.copyParamToBean(req.getParameterMap(), new User());
 
-        if (token!=null && token.equalsIgnoreCase(code)) {
+        if (token != null && token.equalsIgnoreCase(code)) {
             if (userService.existsUsername(username)) {
                 System.out.println("用户名[" + username + "]已存在!");
                 req.setAttribute("msg", "用户名已存在！！");
