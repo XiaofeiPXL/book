@@ -13,7 +13,12 @@
             <%--给加入购物车按钮绑定单击事件--%>
             $(".addToCart").click(function () {
                  var bookId = $(this).attr("bookId");
-                 location.href = "${basePath}cartServlet?action=addItem&id="+bookId;
+                 //location.href = "${basePath}cartServlet?action=addItem&id="+bookId;
+                //发ajax请求,添加商品到购物车
+                $.getJSON("http://localhost:8080/Book/cartServlet?","action=ajaxAddItem&id="+bookId,function (data) {
+                      $("#cartTotalCount").text("您的购物车中有"+data.totalCount+"件商品");
+                      $("#cartLastName").text("您刚刚将["+data.lastItemName+"]加入到了购物车中");
+                })
             })
         })
     </script>
@@ -53,12 +58,15 @@
         </div>
         <div style="text-align: center">
             <c:if test="${empty sessionScope.cart.items}">
-                <span>您的购物车中暂时没有商品,快去浏览吧</span>
+                <span id="cartTotalCount"></span>
+                <div>
+                    <span style="color: red" id="cartLastName">您的购物车中暂时没有商品,快去浏览吧</span>
+                </div>
             </c:if>
             <c:if test="${not empty sessionScope.cart.items}">
-                <span>您的购物车中有${sessionScope.cart.totalCount}件商品</span>
+                <span id="cartTotalCount">您的购物车中有${sessionScope.cart.totalCount}件商品</span>
                 <div>
-                    您刚刚将<span style="color: red">${sessionScope.lastName}</span>加入到了购物车中
+                    您刚刚将<span style="color: red" id="cartLastName">${sessionScope.lastName}</span>加入到了购物车中
                 </div>
             </c:if>
         </div>
